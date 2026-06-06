@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 const ROLES = [
   { value: 'artisan', label: '手艺人', icon: '✂️', desc: '我有剪纸技艺，愿意传授' },
   { value: 'learner', label: '学习者', icon: '📖', desc: '我想学习剪纸技艺' },
-  { value: 'enthusiast', label: '爱好者', icon: '❤️', desc: '我热爱剪纸文化' },
+  { value: 'lover', label: '爱好者', icon: '❤️', desc: '我热爱剪纸文化' },
 ];
 
 const Register: React.FC = () => {

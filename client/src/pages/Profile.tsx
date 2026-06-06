@@ -13,7 +13,7 @@ const Profile: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [bookmarks, setBookmarks] = useState<Post[]>([]);
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ bio: '', location: '', tags: '' });
+  const [editForm, setEditForm] = useState({ bio: '', location: '', lng: '', lat: '', tags: '' });
 
   const isSelf = currentUser?._id === id;
 
@@ -23,7 +23,9 @@ const Profile: React.FC = () => {
         setProfile(res.data);
         setEditForm({
           bio: res.data.bio || '',
-          location: res.data.location || '',
+          location: '',
+          lng: res.data.location?.coordinates?.[0]?.toString() || '',
+          lat: res.data.location?.coordinates?.[1]?.toString() || '',
           tags: (res.data.tags || []).join(','),
         });
       }).catch(() => {});
@@ -45,9 +47,14 @@ const Profile: React.FC = () => {
   const handleSaveProfile = async () => {
     if (!currentUser) return;
     try {
+      const lng = parseFloat(editForm.lng) || 0;
+      const lat = parseFloat(editForm.lat) || 0;
       await usersAPI.updateProfile(currentUser._id, {
         bio: editForm.bio,
-        location: editForm.location,
+        location: {
+          type: 'Point',
+          coordinates: [lng, lat],
+        },
         tags: editForm.tags.split(',').map((t) => t.trim()).filter(Boolean),
       });
       setEditing(false);
@@ -69,7 +76,11 @@ const Profile: React.FC = () => {
             {profile.role === 'artisan' ? '手艺人' : profile.role === 'learner' ? '学习者' : '爱好者'}
           </span>
           <p className="jz-profile-bio">{profile.bio || '这个人很懒，还没有简介'}</p>
-          {profile.location && <p className="jz-profile-location">📍 {profile.location}</p>}
+          {profile.location?.coordinates?.[0] && profile.location.coordinates[0] !== 0 && (
+            <p className="jz-profile-location">
+              📍 经度 {profile.location.coordinates[0].toFixed(4)}, 纬度 {profile.location.coordinates[1].toFixed(4)}
+            </p>
+          )}
           <div className="jz-profile-tags">
             {profile.tags.map((tag) => (
               <span key={tag} className="jz-tag">{tag}</span>
@@ -88,8 +99,12 @@ const Profile: React.FC = () => {
             <textarea className="jz-input" value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} rows={3} />
           </div>
           <div className="jz-form-group">
-            <label className="jz-label">位置</label>
-            <input className="jz-input" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} />
+            <label className="jz-label">经度</label>
+            <input className="jz-input" value={editForm.lng} onChange={(e) => setEditForm({ ...editForm, lng: e.target.value })} />
+          </div>
+          <div className="jz-form-group">
+            <label className="jz-label">纬度</label>
+            <input className="jz-input" value={editForm.lat} onChange={(e) => setEditForm({ ...editForm, lat: e.target.value })} />
           </div>
           <div className="jz-form-group">
             <label className="jz-label">标签（逗号分隔）</label>

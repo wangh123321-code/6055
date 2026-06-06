@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Put, Param, Body, UseGuards, Req, ForbiddenException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -32,7 +32,7 @@ export class UsersController {
     @Req() req: any,
   ) {
     if (req.user.userId !== id) {
-      throw new Error('无权修改他人资料');
+      throw new ForbiddenException('无权修改他人资料');
     }
     return this.usersService.updateProfile(id, updateData);
   }

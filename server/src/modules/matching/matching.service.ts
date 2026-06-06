@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Cron } from '@nestjs/schedule';
@@ -73,7 +73,7 @@ export class MatchingService {
             },
           });
           if (nearbyUsers.length > 0) {
-            geoBonus = 0.3;
+            geoBonus = 1;
           }
         }
 
@@ -150,6 +150,9 @@ export class MatchingService {
     const match = await this.matchModel.findById(matchId);
     if (!match) {
       throw new NotFoundException('匹配记录不存在');
+    }
+    if (match.artisan.toString() !== userId && match.learner.toString() !== userId) {
+      throw new ForbiddenException('无权操作该匹配记录');
     }
     match.status = status;
     return match.save();

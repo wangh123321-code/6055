@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     if (token) {
-      usersAPI.getProfile('me')
+      usersAPI.getCurrentProfile()
         .then((res) => setUser(res.data))
         .catch(() => {
           localStorage.removeItem('token');

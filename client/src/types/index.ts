@@ -1,10 +1,13 @@
 export interface User {
   _id: string;
   username: string;
-  role: 'artisan' | 'learner' | 'enthusiast';
+  role: 'artisan' | 'learner' | 'lover';
   avatar: string;
   bio: string;
-  location: string;
+  location: {
+    type: string;
+    coordinates: number[];
+  };
   tags: string[];
   createdAt: string;
 }
@@ -16,7 +19,7 @@ export interface Post {
   content: string;
   images: string[];
   tags: string[];
-  postType: 'apprentice' | 'seeker';
+  postType: 'work' | 'apprentice' | 'seeker';
   teachingMode: 'online' | 'offline' | 'both';
   style: string;
   likeCount: number;
@@ -37,7 +40,7 @@ export interface Match {
   artisan: User;
   learner: User;
   score: number;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'interested' | 'not_suitable';
   createdAt: string;
   expiresAt: string;
 }

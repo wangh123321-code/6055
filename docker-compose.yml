@@ -19,7 +19,7 @@ services:
       - "3001:3001"
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/jianzhi
-      - JWT_SECRET=jianzhi-community-secret-key-2024
+      - JWT_SECRET=${JWT_SECRET:-default-dev-secret-change-in-production}
       - PORT=3001
     depends_on:
       - mongodb
