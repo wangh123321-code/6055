@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { postsAPI } from '../services/api';
 import PostCard from '../components/PostCard';
-import { Post } from '../types';
+import { Post, PaginatedResponse } from '../types';
 
 const TAGS = ['全部', '蔚县剪纸', '陕北剪纸', '扬州剪纸', '佛山剪纸', '满族剪纸', '剪纸刻纸', '染色剪纸', '套色剪纸', '单色剪纸'];
 
@@ -23,12 +23,13 @@ const Home: React.FC = () => {
     if (activeTag !== '全部') params.tag = activeTag;
     postsAPI.getPosts(params)
       .then((res) => {
+        const data = res.data as PaginatedResponse<Post>;
         if (page === 1) {
-          setPosts(res.data);
+          setPosts(data.posts);
         } else {
-          setPosts((prev) => [...prev, ...res.data]);
+          setPosts((prev) => [...prev, ...data.posts]);
         }
-        setHasMore(res.data.length === 12);
+        setHasMore(page * 12 < data.total);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

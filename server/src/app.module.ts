@@ -8,6 +8,7 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { LikesModule } from './modules/likes/likes.module';
 import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { MatchingModule } from './modules/matching/matching.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MatchingModule } from './modules/matching/matching.module';
     LikesModule,
     BookmarksModule,
     MatchingModule,
+    SeedModule,
   ],
 })
 export class AppModule {}

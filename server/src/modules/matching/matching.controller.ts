@@ -32,7 +32,7 @@ export class MatchingController {
   @Post('run')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiOperation({ summary: '手动触发匹配（测试用）' })
+  @ApiOperation({ summary: '手动触发匹配' })
   runMatching() {
     return this.matchingService.runMatching();
   }

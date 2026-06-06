@@ -29,13 +29,16 @@ export class PostsService {
     if (author) filter.author = author;
 
     const skip = (page - 1) * limit;
-    const posts = await this.postModel
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('author', 'username avatar role');
-    return posts;
+    const [posts, total] = await Promise.all([
+      this.postModel
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('author', 'username avatar role'),
+      this.postModel.countDocuments(filter),
+    ]);
+    return { posts, total };
   }
 
   async findHot(limit: number = 10) {

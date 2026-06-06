@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsArray } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePostDto {
@@ -25,12 +25,12 @@ export class CreatePostDto {
   tags: string[];
 
   @ApiProperty({ enum: ['work', 'apprentice', 'seeker'] })
-  @IsEnum(['work', 'apprentice', 'seeker'])
+  @IsIn(['work', 'apprentice', 'seeker'], { message: 'postType必须为work、apprentice或seeker' })
   postType: string;
 
   @ApiPropertyOptional({ enum: ['online', 'offline', 'both'] })
   @IsOptional()
-  @IsEnum(['online', 'offline', 'both'])
+  @IsIn(['online', 'offline', 'both'], { message: 'teachingMode必须为online、offline或both' })
   teachingMode: string;
 
   @ApiPropertyOptional()

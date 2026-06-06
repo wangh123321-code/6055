@@ -1,7 +1,7 @@
 export interface User {
   _id: string;
   username: string;
-  role: 'artisan' | 'learner' | 'lover';
+  role: 'artisan' | 'learner' | 'lover' | 'admin';
   avatar: string;
   bio: string;
   location: {
@@ -43,4 +43,9 @@ export interface Match {
   status: 'pending' | 'interested' | 'not_suitable';
   createdAt: string;
   expiresAt: string;
+}
+
+export interface PaginatedResponse<T> {
+  posts: T[];
+  total: number;
 }

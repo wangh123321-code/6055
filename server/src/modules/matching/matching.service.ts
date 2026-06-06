@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Cron } from '@nestjs/schedule';
@@ -147,6 +147,10 @@ export class MatchingService {
   }
 
   async submitFeedback(matchId: string, userId: string, status: string) {
+    const validStatuses = ['interested', 'not_suitable'];
+    if (!validStatuses.includes(status)) {
+      throw new BadRequestException('status必须为interested或not_suitable');
+    }
     const match = await this.matchModel.findById(matchId);
     if (!match) {
       throw new NotFoundException('匹配记录不存在');
