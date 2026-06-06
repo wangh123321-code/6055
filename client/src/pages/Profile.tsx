@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { usersAPI, postsAPI, bookmarksAPI } from '../services/api';
+import { useParams, Link } from 'react-router-dom';
+import { usersAPI, postsAPI, bookmarksAPI, collectionsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import PostCard from '../components/PostCard';
-import { User, Post } from '../types';
+import { User, Post, Collection } from '../types';
 
 const Profile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'posts' | 'bookmarks'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'collections' | 'bookmarks'>('posts');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [bookmarks, setBookmarks] = useState<Post[]>([]);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ bio: '', location: '', lng: '', lat: '', tags: '' });
+  const [showAddToCollectionModal, setShowAddToCollectionModal] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [myCollections, setMyCollections] = useState<Collection[]>([]);
+  const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
+  const [newCollection, setNewCollection] = useState({ title: '', description: '', cover: '' });
 
   const isSelf = currentUser?._id === id;
 
@@ -34,15 +40,29 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      postsAPI.getPosts({ author: id, limit: 50 }).then((res) => setPosts(res.data)).catch(() => {});
+      postsAPI.getPosts({ author: id, limit: 50 }).then((res) => setPosts(res.data.posts)).catch(() => {});
     }
   }, [id]);
+
+  useEffect(() => {
+    if (id && activeTab === 'collections') {
+      collectionsAPI.getCollections({ owner: id, limit: 50 }).then((res) => {
+        setCollections(res.data.collections);
+      }).catch(() => {});
+    }
+  }, [id, activeTab]);
 
   useEffect(() => {
     if (isSelf && activeTab === 'bookmarks') {
       bookmarksAPI.getMyBookmarks().then((res) => setBookmarks(res.data)).catch(() => {});
     }
   }, [isSelf, activeTab]);
+
+  useEffect(() => {
+    if (isSelf && showAddToCollectionModal) {
+      collectionsAPI.getMyCollections().then((res) => setMyCollections(res.data)).catch(() => {});
+    }
+  }, [isSelf, showAddToCollectionModal]);
 
   const handleSaveProfile = async () => {
     if (!currentUser) return;
@@ -59,6 +79,37 @@ const Profile: React.FC = () => {
       });
       setEditing(false);
       if (id) usersAPI.getProfile(id).then((res) => setProfile(res.data));
+    } catch {}
+  };
+
+  const handleAddToCollection = (postId: string) => {
+    setSelectedPostId(postId);
+    setShowAddToCollectionModal(true);
+  };
+
+  const handleConfirmAddToCollection = async (collectionId: string) => {
+    if (!selectedPostId) return;
+    try {
+      await collectionsAPI.addPostToCollection(collectionId, selectedPostId);
+      setShowAddToCollectionModal(false);
+      setSelectedPostId(null);
+    } catch {}
+  };
+
+  const handleCreateCollection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await collectionsAPI.createCollection(newCollection);
+      setShowCreateCollectionModal(false);
+      setNewCollection({ title: '', description: '', cover: '' });
+      if (id) {
+        collectionsAPI.getCollections({ owner: id, limit: 50 }).then((res) => {
+          setCollections(res.data.collections);
+        });
+      }
+      if (isSelf) {
+        collectionsAPI.getMyCollections().then((res) => setMyCollections(res.data));
+      }
     } catch {}
   };
 
@@ -124,6 +175,12 @@ const Profile: React.FC = () => {
         >
           作品集
         </button>
+        <button
+          className={`jz-tab-btn ${activeTab === 'collections' ? 'jz-tab-btn-active' : ''}`}
+          onClick={() => setActiveTab('collections')}
+        >
+          合辑
+        </button>
         {isSelf && (
           <button
             className={`jz-tab-btn ${activeTab === 'bookmarks' ? 'jz-tab-btn-active' : ''}`}
@@ -132,13 +189,174 @@ const Profile: React.FC = () => {
             收藏
           </button>
         )}
+        {isSelf && (
+          <button
+            className="jz-btn jz-btn-primary"
+            style={{ marginLeft: 'auto' }}
+            onClick={() => setShowCreateCollectionModal(true)}
+          >
+            + 创建合辑
+          </button>
+        )}
       </div>
 
-      <div className="jz-post-grid">
-        {(activeTab === 'posts' ? posts : bookmarks).map((post) => (
-          <PostCard key={post._id} post={post} />
-        ))}
-      </div>
+      {activeTab === 'posts' && (
+        <div className="jz-post-grid">
+          {posts.map((post) => (
+            <PostCard
+              key={post._id}
+              post={post}
+              showAddToCollection={isSelf}
+              onAddToCollection={handleAddToCollection}
+            />
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'collections' && (
+        <div className="jz-collections-grid">
+          {collections.map((col) => (
+            <Link key={col._id} to={`/collections/${col._id}`} className="jz-collection-card">
+              <div className="jz-collection-cover">
+                {col.cover ? <img src={col.cover} alt={col.title} /> : '📚'}
+              </div>
+              <div className="jz-collection-body">
+                <h3 className="jz-collection-title">{col.title}</h3>
+                <p className="jz-collection-desc">{col.description || '暂无简介'}</p>
+                <div className="jz-collection-meta">
+                  <span>📝 {col.postCount || 0} 作品</span>
+                  <span>{new Date(col.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'bookmarks' && (
+        <div className="jz-post-grid">
+          {bookmarks.map((post) => (
+            <PostCard key={post._id} post={post} />
+          ))}
+        </div>
+      )}
+
+      {(activeTab === 'posts' && posts.length === 0) ||
+      (activeTab === 'collections' && collections.length === 0) ||
+      (activeTab === 'bookmarks' && bookmarks.length === 0) ? (
+        <div className="jz-empty-state">
+          <p>
+            {activeTab === 'posts' && '暂无作品'}
+            {activeTab === 'collections' && '暂无合辑'}
+            {activeTab === 'bookmarks' && '暂无收藏'}
+          </p>
+          {isSelf && activeTab === 'collections' && (
+            <button className="jz-btn jz-btn-primary" onClick={() => setShowCreateCollectionModal(true)}>
+              创建第一个合辑
+            </button>
+          )}
+        </div>
+      ) : null}
+
+      {showAddToCollectionModal && (
+        <div className="jz-modal-overlay" onClick={() => setShowAddToCollectionModal(false)}>
+          <div className="jz-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="jz-modal-title">添加到合辑</h3>
+            {myCollections.length === 0 ? (
+              <div className="jz-empty-state">
+                <p>您还没有合辑</p>
+                <button
+                  className="jz-btn jz-btn-primary"
+                  onClick={() => {
+                    setShowAddToCollectionModal(false);
+                    setShowCreateCollectionModal(true);
+                  }}
+                >
+                  创建合辑
+                </button>
+              </div>
+            ) : (
+              myCollections.map((col) => (
+                <div
+                  key={col._id}
+                  className="jz-collection-item"
+                  onClick={() => handleConfirmAddToCollection(col._id)}
+                >
+                  <div className="jz-collection-item-title">{col.title}</div>
+                  <div className="jz-collection-item-meta">
+                    {col.postCount || 0} 个作品
+                  </div>
+                </div>
+              ))
+            )}
+            <div className="jz-modal-actions">
+              <button
+                className="jz-btn jz-btn-outline"
+                onClick={() => setShowAddToCollectionModal(false)}
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCreateCollectionModal && (
+        <div className="jz-modal-overlay" onClick={() => setShowCreateCollectionModal(false)}>
+          <div className="jz-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="jz-modal-title">创建合辑</h3>
+            <form onSubmit={handleCreateCollection}>
+              <div className="jz-form-group">
+                <label className="jz-label">标题</label>
+                <input
+                  className="jz-input"
+                  value={newCollection.title}
+                  onChange={(e) =>
+                    setNewCollection({ ...newCollection, title: e.target.value })
+                  }
+                  placeholder="如：2025春节窗花系列"
+                  required
+                />
+              </div>
+              <div className="jz-form-group">
+                <label className="jz-label">简介</label>
+                <textarea
+                  className="jz-input"
+                  rows={3}
+                  value={newCollection.description}
+                  onChange={(e) =>
+                    setNewCollection({ ...newCollection, description: e.target.value })
+                  }
+                  placeholder="介绍一下这个合辑的内容..."
+                />
+              </div>
+              <div className="jz-form-group">
+                <label className="jz-label">封面图片URL</label>
+                <input
+                  className="jz-input"
+                  value={newCollection.cover}
+                  onChange={(e) =>
+                    setNewCollection({ ...newCollection, cover: e.target.value })
+                  }
+                  placeholder="可选"
+                />
+              </div>
+              <div className="jz-modal-actions">
+                <button
+                  type="button"
+                  className="jz-btn jz-btn-outline"
+                  onClick={() => setShowCreateCollectionModal(false)}
+                >
+                  取消
+                </button>
+                <button type="submit" className="jz-btn jz-btn-primary">
+                  创建
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

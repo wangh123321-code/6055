@@ -37,4 +37,24 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   style: string;
+
+  @ApiPropertyOptional({ description: '邀请的共同作者用户ID列表' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  coAuthorInvites: string[];
+}
+
+export class InviteCoAuthorDto {
+  @ApiProperty({ description: '被邀请的用户ID' })
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
+}
+
+export class ConfirmCoAuthorDto {
+  @ApiProperty({ description: '帖子ID' })
+  @IsString()
+  @IsNotEmpty()
+  postId: string;
 }

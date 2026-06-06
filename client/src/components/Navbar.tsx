@@ -17,9 +17,11 @@ const Navbar: React.FC = () => {
         <Link to="/" className="jz-navbar-brand">剪纸社区</Link>
         <div className="jz-navbar-links">
           <Link to="/" className="jz-navbar-link">首页</Link>
+          <Link to="/collections" className="jz-navbar-link">作品合辑</Link>
           <Link to="/match" className="jz-navbar-link">师徒匹配</Link>
           {user && (
             <>
+              <Link to="/post/work" className="jz-navbar-link">发布作品</Link>
               <Link to="/post/apprentice" className="jz-navbar-link">发布收徒帖</Link>
               <Link to="/post/seeker" className="jz-navbar-link">发布求师帖</Link>
             </>

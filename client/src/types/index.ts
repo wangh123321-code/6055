@@ -12,9 +12,34 @@ export interface User {
   createdAt: string;
 }
 
+export interface CoAuthor {
+  userId: User;
+  confirmed: boolean;
+  invitedAt: string;
+  confirmedAt?: string;
+}
+
+export interface Collection {
+  _id: string;
+  owner: User;
+  title: string;
+  description: string;
+  cover: string;
+  posts: string[];
+  postCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Post {
   _id: string;
   author: User;
+  coAuthors: CoAuthor[];
+  collection?: {
+    _id: string;
+    title: string;
+    cover: string;
+  };
   title: string;
   content: string;
   images: string[];
@@ -47,5 +72,16 @@ export interface Match {
 
 export interface PaginatedResponse<T> {
   posts: T[];
+  total: number;
+}
+
+export interface PaginatedCollectionsResponse {
+  collections: Collection[];
+  total: number;
+}
+
+export interface CollectionWithPostsResponse {
+  collection: Collection;
+  posts: Post[];
   total: number;
 }

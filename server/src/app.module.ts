@@ -8,6 +8,7 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { LikesModule } from './modules/likes/likes.module';
 import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { MatchingModule } from './modules/matching/matching.module';
+import { CollectionsModule } from './modules/collections/collections.module';
 import { SeedModule } from './seed/seed.module';
 
 @Module({
@@ -21,6 +22,7 @@ import { SeedModule } from './seed/seed.module';
     LikesModule,
     BookmarksModule,
     MatchingModule,
+    CollectionsModule,
     SeedModule,
   ],
 })
